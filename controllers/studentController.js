@@ -1,14 +1,68 @@
 const { validationResult } = require("express-validator");
 const Student = require("../models/student");
+const bcrypt = require("bcrypt");
+var jwt = require("jsonwebtoken");
+
+const register = async (req, res) => {
+  const { name, age, email, password, role } = req.body;
+  const existingStudent = await Student.findOne({ email: req.body.email });
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(500).json(errors.array());
+  }
+  if (existingStudent) {
+    return res.status(500).json({ msg: "email already exists" });
+  }
+  const hashedPassword = await bcrypt.hash(password, 8);
+  const newStudent = new Student({
+    name,
+    age,
+    email,
+    password: hashedPassword,
+    role,
+  });
+  const token = await jwt.sign(
+    { email: newStudent.email, _id: newStudent._id,role:newStudent.role },
+    process.env.SercretKey,
+    { expiresIn: "10m" }
+  );
+  console.log(token);
+  await newStudent.save();
+  newStudent.token = token;
+  res.status(200).json({ msg: "User Registered succesfully" }, newStudent);
+};
+const login = async (req, res) => {
+  const { email, password } = req.body;
+  if (!email || !password) {
+    return res.status(400).json({ msg: "email and password required" });
+  }
+  const student = await Student.findOne({ email: email });
+  if (!student) {
+    return res.status(400).json({ msg: "email or password aren't correct" });
+  }
+  const matchedPassword = await bcrypt.compare(password, student.password);
+  if (!matchedPassword) {
+    return res.status(400).json({ msg: "email or password aren't correct" });
+  }
+  const token = jwt.sign(
+    { email: student.email, _id: student._id,role:student.role },
+    process.env.SercretKey,
+    { expiresIn: "10m" }
+  );
+  return res
+    .status(200)
+    .json({ msg: "user logged in successfully", data: { token } });
+};
 
 const getAllStudents = async (req, res) => {
   const query = req.query;
   const limit = query.limit || 4;
   const page = query.page || 1;
   const skip = (page - 1) * limit;
-  const students = await Student.find().limit(limit).skip(skip);
+  const students = await Student.find({}, { password: false })
+    .limit(limit)
+    .skip(skip);
   res.json(students);
-  console.log(students);
 };
 const getStudent = async (req, res) => {
   const student = await Student.findById(req.params.studentId);
@@ -52,10 +106,13 @@ const deleteStudent = async (req, res) => {
     res.status(500).json({ msg: "user doesnt exist" });
   }
 };
+
 module.exports = {
   deleteStudent,
   updateStudent,
   addStudent,
   getStudent,
   getAllStudents,
+  register,
+  login,
 };
