@@ -6,6 +6,4 @@ const allowed = (...roles) => {
     next();
   };
 };
-module.exports={
-    allowed,
-}
+module.exports = allowed;

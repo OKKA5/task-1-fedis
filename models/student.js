@@ -27,6 +27,10 @@ const studentSchema = new mongoose.Schema(
       enum: [roles.ADMIN, roles.USER],
       default: roles.USER,
     },
+    avatar: {
+      type: String,
+      default:"uploads/pic.png"
+    },
   },
   { timestamps: true }
 );

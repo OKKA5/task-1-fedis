@@ -20,9 +20,10 @@ const register = async (req, res) => {
     email,
     password: hashedPassword,
     role,
+    avatar: req.file.filename, 
   });
   const token = await jwt.sign(
-    { email: newStudent.email, _id: newStudent._id,role:newStudent.role },
+    { email: newStudent.email, _id: newStudent._id, role: newStudent.role },
     process.env.SercretKey,
     { expiresIn: "10m" }
   );
@@ -45,7 +46,7 @@ const login = async (req, res) => {
     return res.status(400).json({ msg: "email or password aren't correct" });
   }
   const token = jwt.sign(
-    { email: student.email, _id: student._id,role:student.role },
+    { email: student.email, _id: student._id, role: student.role },
     process.env.SercretKey,
     { expiresIn: "10m" }
   );
@@ -87,24 +88,23 @@ const addStudent = async (req, res) => {
   res.json(newStudent);
 };
 const updateStudent = async (req, res) => {
-  const student = await Student.findOne({ email: req.body.email });
-  if (student) {
-    await Student.findByIdAndUpdate(req.params.studentId, {
-      $set: { ...req.body },
-    });
-    res.json({ msg: "student updated success" });
-  } else {
+  const studentData = await Student.findByIdAndUpdate(req.params.studentId, {
+    $set: { ...req.body },
+    new: true,
+  });
+  if (!studentData) {
     res.status(500).json({ msg: "user doesnt exist" });
   }
+  res.json({ msg: "student updated success" });
 };
 const deleteStudent = async (req, res) => {
-  const student = await Student.findOne({ _id: req.params.studentId });
-  if (student) {
-    await Student.deleteOne(student);
-    res.json({ msg: "deleted success" });
-  } else {
+  const student = await Student.findByIdAndDelete({
+    _id: req.params.studentId,
+  });
+  if (!student) {
     res.status(500).json({ msg: "user doesnt exist" });
   }
+  res.json({ msg: "deleted success" });
 };
 
 module.exports = {
