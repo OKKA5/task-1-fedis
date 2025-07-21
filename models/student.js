@@ -29,7 +29,7 @@ const studentSchema = new mongoose.Schema(
     },
     avatar: {
       type: String,
-      default:"uploads/pic.png"
+      default:"uploads/Pic.png"
     },
   },
   { timestamps: true }

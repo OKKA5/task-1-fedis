@@ -20,7 +20,7 @@ const register = async (req, res) => {
     email,
     password: hashedPassword,
     role,
-    avatar: req.file.filename, 
+    avatar: req.file?.filename ,
   });
   const token = await jwt.sign(
     { email: newStudent.email, _id: newStudent._id, role: newStudent.role },
@@ -30,7 +30,11 @@ const register = async (req, res) => {
   console.log(token);
   await newStudent.save();
   newStudent.token = token;
-  res.status(200).json({ msg: "User Registered succesfully" }, newStudent);
+  res;
+  res.status(200).json({
+    msg: "User Registered successfully",
+    data: newStudent,
+  });
 };
 const login = async (req, res) => {
   const { email, password } = req.body;

@@ -13,19 +13,21 @@ const diskStorage = multer.diskStorage({
     cb(null, "uploads");
   },
   filename: function (req, file, cb) {
-    const ext = file.mimetype.split5("/")[1];
+    const ext = file.mimetype.split("/")[1];
     const fileName = `user-${Date.now()}.${ext}`;
     cb(null, fileName);
   },
 });
+
 const fileFilter = (req, res, next) => {
   const imgType = file.mimetype.split("/")[0];
-  if (imgType == image) {
+  if (imgType == "image") {
     return cb(null, true);
   } else {
-    return cb(res.status(400).json({ msg: "only images are accepted" }));
+    return cb(new Error("Only images allowed"), false);
   }
 };
+
 const upload = multer({ storage: diskStorage, fileFilter: fileFilter });
 
 router
